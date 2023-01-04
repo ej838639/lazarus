@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Quiz Result {% endblock %}</h1>
+    <h3>Question: {{ question[0] }}</h3>
+    <h3>Possible Answers:</h3>
+    {% for answer in answers[0] %}
+        <div class='answer'>
+            <h3>{{ answer }}</h3>
+        </div>
+    {% endfor %}
+    <h3>Correct Answer: {{ correct_answer[0] }}</h3>
+{% endblock %}

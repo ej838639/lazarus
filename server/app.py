@@ -1,21 +1,51 @@
 """
-Main code for lazarus.
+Main code for lazarus project.
+https://github.com/ej838639/lazarus
+
+Open terminal and run:
+export FLASK_APP=app.py
+export FLASK_ENV=development
+cd server
+flask run --host=localhost --port=3000
+
+Open browser and enter:
+http://localhost:3000/quiz_create/result
 
 """
 
 import pandas as pd
 from io import StringIO
+from flask import Flask, render_template, request, url_for, redirect
 
-def main():
-    # input table
+app = Flask(__name__)
+
+
+@app.route('/quiz_create/result')
+def result_get():
+    S = '''
+    Sorting Algorithm,Space Complexity
+    Selection Sort,O(1)
+    Bubble Sort,O(1)
+    Insertion Sort,O(1)
+    Merge Sort,O(n)
+    Quick Sort,O(1)
+    Heap Sort,O(1)
+    '''
+
     tablecalc = TableCalc(S)
-    print(tablecalc.question + '\n')
-    print(tablecalc.answers)
-    print('\n')
-    print('Correct answer: ' + tablecalc.correct_answer)
 
-    print('Stop')
-    return
+    question_arr = list()
+    answers_arr = list()
+    correct_answer_arr = list()
+
+    question_arr.append(tablecalc.question)
+    answers_arr.append(tablecalc.answers)
+    correct_answer_arr.append(tablecalc.correct_answer)
+
+    return render_template('index.html',
+                           question=question_arr,
+                           answers=answers_arr,
+                           correct_answer=correct_answer_arr)
 
 
 class TableCalc:
@@ -59,7 +89,8 @@ class TableCalc:
                 # only one different col2 value:
                 # choose MC1 format with row that has the one value
                 self.question = 'What {} is {}?'.format(self.df_col_names[1], self.df_count.iloc[0,0])
-                self.answers = self.df[self.df_col_names[0]].to_string(index=False)
+                # self.answers = self.df[self.df_col_names[0]].to_string(index=False)
+                self.answers = self.df[self.df_col_names[0]].tolist()
 
                 # keep list and append 'X' to correct answers. Later: use format to import to quiz tool
                 self.correct_answer = self.df.loc[self.df[self.df_col_names[1]] == self.df_count.iloc[0,0]]
@@ -67,17 +98,3 @@ class TableCalc:
 
             # more than one col2 value, and multiple rows have the same value:
             # choose MCM format using most common col2 value. If multiple are most common, choose any.
-
-
-S = '''
-Sorting Algorithm,Space Complexity
-Selection Sort,O(1)
-Bubble Sort,O(1)
-Insertion Sort,O(1)
-Merge Sort,O(n)
-Quick Sort,O(1)
-Heap Sort,O(1)
-'''
-
-if __name__ == '__main__':
-    main()

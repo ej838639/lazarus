@@ -1,0 +1,8 @@
+# Ignore Mac system files
+.DS_store
+
+# folders to ignore
+.idea/
+diagrams/
+__pycache__/
+venv/
