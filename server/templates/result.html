@@ -2,6 +2,7 @@
 
 {% block content %}
     <h1>{% block title %} Quiz Result {% endblock %}</h1>
+    <h3>Click on "Submit Items" above to create another quiz.</h3>
     <h3>Question: {{ question[0] }}</h3>
     <h3>Possible Answers:</h3>
     {% for answer in answers[0] %}

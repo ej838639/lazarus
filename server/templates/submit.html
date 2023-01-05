@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Enter Items {% endblock %}</h1>
+    <h3>Enter a list of items and how they are categorized.</h3>
+    <h4>(Work in progress. List of items does not matter: just type something and hit enter. The following is the default input.)</h4>
+    <h4>Sorting Algorithm,Space Complexity</h4>
+    <h4>Selection Sort,O(1)</h4>
+    <h4>Bubble Sort,O(1)</h4>
+    <h4>Insertion Sort,O(1)</h4>
+    <h4>Merge Sort,O(n)</h4>
+    <h4>Quick Sort,O(1)</h4>
+    <h4>Heap Sort,O(1)</h4>
+    <form method="post">
+        <p>
+            <label for="input1">Enter List of Items</label>
+            <input type="text" name="input1"
+                   placeholder="Enter list of items">
+            </input>
+        </p>
+
+    </form>
+{% endblock %}

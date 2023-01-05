@@ -1,0 +1,37 @@
+{% extends "base_v2.html" %}
+
+{% block content %}
+  <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+        <th>List Name</th>
+        <th>List Items</th>
+        <th>List Category</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+        <tr>
+          <td>{{ item.list_name }}</td>
+          <td>{{ item.list_items }}</td>
+          <td>{{ item.list_category }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+      $('#data').DataTable({
+        columns: [
+          null,
+          {searchable: false},
+          {orderable: false, searchable: false},
+          {orderable: false, searchable: false},
+          null],
+      });
+    });
+  </script>
+{% endblock %}

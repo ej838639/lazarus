@@ -9,20 +9,60 @@ cd server
 flask run --host=localhost --port=3000
 
 Open browser and enter:
-http://localhost:3000/quiz_create/result
+http://localhost:3000/quiz_create
+
+Test Case string input:
+Sorting Algorithm,Space Complexity
+Selection Sort,O(1)
+Bubble Sort,O(1)
+Insertion Sort,O(1)
+Merge Sort,O(n)
+Quick Sort,O(1)
+Heap Sort,O(1)
 
 """
 
 import pandas as pd
 from io import StringIO
 from flask import Flask, render_template, request, url_for, redirect
+# from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# db = SQLAlchemy(app)
+#
+#
+# class Item(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     list_name = db.Column(db.String(64), index=True)
+#     list_items = db.Column(db.String(256), index=True)
+#     list_category = db.Column(db.String(256), index=True)
+
+# db.create_all()
+
+
+@app.route('/quiz_create')
+def main():
+
+    return render_template('main.html')
+
+
+@app.route('/quiz_create/submit', methods=('GET', 'POST'))
+def submit():
+    if request.method == 'POST':
+        input1 = request.form['input1']
+
+        return redirect(url_for('result_get', input1=input1))
+
+    return render_template('submit.html')
 
 
 @app.route('/quiz_create/result')
 def result_get():
-    S = '''
+    # input1 = request.args['input1']
+
+    input1 = '''
     Sorting Algorithm,Space Complexity
     Selection Sort,O(1)
     Bubble Sort,O(1)
@@ -32,7 +72,7 @@ def result_get():
     Heap Sort,O(1)
     '''
 
-    tablecalc = TableCalc(S)
+    tablecalc = TableCalc(input1)
 
     question_arr = list()
     answers_arr = list()
@@ -42,7 +82,11 @@ def result_get():
     answers_arr.append(tablecalc.answers)
     correct_answer_arr.append(tablecalc.correct_answer)
 
-    return render_template('index.html',
+    # question_arr.append(test1)
+    # answers_arr.append(input2)
+    # correct_answer_arr.append("something3")
+
+    return render_template('result.html',
                            question=question_arr,
                            answers=answers_arr,
                            correct_answer=correct_answer_arr)
