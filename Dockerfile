@@ -3,7 +3,6 @@ WORKDIR /usr/src/lazarus
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY server/ server/
-ENV FLASK_ENV=development
 ENV FLASK_APP=server/app
 ENV PORT=3000
 EXPOSE 3000
