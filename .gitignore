@@ -1,8 +1,12 @@
 # Ignore Mac system files
 .DS_store
+*.tfstate
+*.backup
+*.hcl
 
 # folders to ignore
 .idea/
 diagrams/
 __pycache__/
 venv/
+.terraform/

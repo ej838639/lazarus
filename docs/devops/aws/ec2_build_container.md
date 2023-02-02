@@ -130,19 +130,67 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html
 How obtain Public DNS from CLI? ec2-52-13-102-212.us-west-2.compute.amazonaws.com
 ```shell
 ssh -i MyKeyPair.pem ec2-user@ec2-52-13-102-212.us-west-2.compute.amazonaws.com
-ssh ec2-user@ec2-52-13-102-212.us-west-2.compute.amazonaws.com
 
 # Now in EC2 instance
 sudo yum update -y  # ensure most recent packages installed on instance
 sudo amazon-linux-extras install docker # how avoid user input for yes?
-sudo service docker start
-sudo docker pull registry.hub.docker.com/ej838639/lazarus:1.7
-sudo docker build -t ej838639/lazarus:1.7 .
-sudo docker run \
+sudo usermod -a -G docker ec2-user
+su -s ec2-user # instead of the following
+###
+# exit
+# # back to aws prompt
+# ssh -i MyKeyPair.pem ec2-user@ec2-52-13-102-212.us-west-2.compute.amazonaws.com
+# # Now in EC2 instance
+service docker start
+docker pull registry.hub.docker.com/ej838639/lazarus:1.7
+docker run \
 --name lazarus_1_7 \
 -p 3000:3000 \
 -e FLASK_ENV=production \
 -d \
-ej838639/lazarus:1.7 
-docker ps  # confirm container running
+ej838639/lazarus:1.7
+
+export PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
+echo $PUBLIC_IP
+
 ```
+
+## Open Source Tools
+https://aws.amazon.com/blogs/opensource/deploying-python-flask-microservices-to-aws-using-open-source-tools/
+
+### Create Elastic Container Registry (ECR)
+
+```shell
+export REGION="us-west-2"
+export AWS_ID="254394382277"
+
+aws ecr create-repository \
+--repository-name lazarus-app \
+--image-scanning-configuration scanOnPush=true \
+--region $REGION
+
+aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $AWS_ID.dkr.ecr.$REGION.amazonaws.com/lazarus-app
+
+```
+
+### Push docker image
+```shell
+docker tag ej838639/lazarus:1.7 $AWS_ID.dkr.ecr.$REGION.amazonaws.com/lazarus-app:1.7
+docker push $AWS_ID.dkr.ecr.$REGION.amazonaws.com/lazarus-app:1.7
+
+```
+
+### Terraform
+cd to terraform folder
+```shell
+terraform init
+terraform plan
+# ECR Image URL: $AWS_ID.dkr.ecr.$REGION.amazonaws.com/lazarus-app
+# ECR Image URL: 254394382277.dkr.ecr.us-west-2.amazonaws.com/lazarus-app
+terraform apply
+# alb_dns_name = "ecsalb-1930855968.us-west-2.elb.amazonaws.com"
+
+
+```
+
+http://ecsalb-1930855968.us-west-2.elb.amazonaws.com/quiz_create
