@@ -82,8 +82,8 @@ resource "aws_iam_role" "ec2_role" {
           ]
           Effect = "Allow"
           Resource = [
-            "arn:aws:logs:us-east-1:${local.account_id}:*/*",
-            "arn:aws:dynamodb:us-east-1:${local.account_id}:*/*"
+            "arn:aws:logs:us-west-2:${local.account_id}:*/*",
+            "arn:aws:dynamodb:us-west-2:${local.account_id}:*/*"
           ]
         }
       ]
@@ -132,8 +132,8 @@ resource "aws_iam_role" "autoscaling_role" {
           ]
           Effect = "Allow"
           Resource = [
-            "arn:aws:ecs:us-east-1:${local.account_id}:*/*",
-            "arn:aws:cloudwatch:us-east-1:${local.account_id}:*/*"
+            "arn:aws:ecs:us-west-2:${local.account_id}:*/*",
+            "arn:aws:cloudwatch:us-west-2:${local.account_id}:*/*"
           ]
         }
       ]
@@ -370,7 +370,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   container_definitions = <<DEFINITION
 [
   {
-    "name": "demo-app",
+    "name": "lazarus-app",
     "cpu": 10,
     "image": "${var.ecs_image_url}",
     "essential": true,
@@ -379,8 +379,8 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       "logDriver": "awslogs",
       "options": {
         "awslogs-group": "ecs-logs",
-        "awslogs-region": "us-east-1",
-        "awslogs-stream-prefix": "ecs-demo-app"
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "lazarus-app"
       }
     },
     "mountPoints": [
