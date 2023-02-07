@@ -3,6 +3,7 @@
 *.tfstate
 *.backup
 *.hcl
+*.pem
 
 # folders to ignore
 .idea/

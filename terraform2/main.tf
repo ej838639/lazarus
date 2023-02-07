@@ -14,11 +14,11 @@ provider "aws" {
 
 locals {
   smallest_instance = "t2.micro"
-  amazon_linux_os = "ami-06e85d4c3149db26a"
+  linux_os = "ami-06e85d4c3149db26a"
 }
 
 resource "aws_instance" "lazarus" {
-  ami           = local.amazon_linux_os
+  ami           = local.linux_os
   instance_type = local.smallest_instance
 
   tags = {
@@ -29,4 +29,3 @@ resource "aws_instance" "lazarus" {
 output "instance_public_ip" {
   value = aws_instance.lazarus.public_ip
 }
-

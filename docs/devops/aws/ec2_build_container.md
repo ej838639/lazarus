@@ -65,6 +65,7 @@ aws configure  # enter credentials
 
 ### Create Key Pair
 https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-keypairs.html
+Create an aws directory outside the project to store the key pair. cd into the dir
 ```shell
 aws ec2 create-key-pair \
 --key-name MyKeyPair \
@@ -74,6 +75,13 @@ aws ec2 create-key-pair \
 chmod 400 MyKeyPair.pem
 ```
 
+### Variables
+```shell
+SMALLEST_INSTANCE='t2.micro'
+LINUX_OS='ami-06e85d4c3149db26a'
+PROJECT='lazarus'
+```
+
 ### Create Security Group
 https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-sg.html
 (This was configured automatically in the console.)
@@ -81,31 +89,27 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-sg.html
 Manually create Security Group
 https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html
 ```shell
-aws ec2 create-security-group \
---group-name lazarus-sg \
---description "lazarus security group"
-# Output -> GroupId: sg-0667570fe7ab6ac45
-# launch wizard: sg-03c5a8fee7b3b5813
-
-# find your IP address
-curl https://checkip.amazonaws.com
-# Output -> 172.56.105.166
+SECURITY_GROUP=`aws ec2 create-security-group \
+--group-name $PROJECT-sg \
+--description "$PROJECT security group" \
+--output text`
 
 aws ec2 authorize-security-group-ingress \
---group-id sg-0667570fe7ab6ac45 \
---protocol tcp \
---port 80 \
---cidr 0.0.0.0/0
-
-aws ec2 authorize-security-group-ingress \
---group-id sg-0667570fe7ab6ac45 \
+--group-id $SECURITY_GROUP \
 --protocol tcp \
 --port 22 \
 --cidr 0.0.0.0/0
 
 aws ec2 authorize-security-group-ingress \
---group-id sg-0667570fe7ab6ac45 \
+--group-id $SECURITY_GROUP \
 --ip-permissions IpProtocol=tcp,FromPort=3000,ToPort=3000,IpRanges="[{CidrIp=0.0.0.0/0,Description='Docker port for a Flask app'}]"
+
+# if needed to set SECURITY_GROUP variable 
+SECURITY_GROUP=`aws ec2 describe-security-groups \
+--filters "Name=group-name,Values=$PROJECT-sg" \
+--query "SecurityGroups[*].GroupId" \
+--output text`
+
 ```
 
 ### Create EC2 instance
@@ -117,31 +121,52 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/finding-an-ami.html
 Use the same AMI recommended for Linux when creating the instance in the console
 ```shell
 aws ec2 run-instances \
---image-id ami-06e85d4c3149db26a \
+--image-id $LINUX_OS \
 --count 1 \
---instance-type t2.micro \
+--instance-type $SMALLEST_INSTANCE \
 --key-name MyKeyPair \
---security-group-ids sg-0667570fe7ab6ac45
-# Instance ID: i-0333aa35bf9cf5d98
+--security-group-ids $SECURITY_GROUP \
+--tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$PROJECT}]"
+
+# To update instance later
+INSTANCE_ID=`aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=$PROJECT" "Name=instance-state-name,Values=running" \
+--query "Reservations[*].Instances[*].InstanceId" \
+--output text`
+
+# For Public DNS to use for SSH
+PUBLIC_DNS_NAME=`aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=$PROJECT" \
+--query "Reservations[*].Instances[*].PublicDnsName" \
+--output text`
+
+# For Public IP address to use to access Flask app
+PUBLIC_IP=`aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=$PROJECT" \
+--query "Reservations[*].Instances[*].PublicIpAddress" \
+--output text`
+
+# hyperlink to run app
+HYPERLINK="http://$PUBLIC_IP:3000/quiz_create"
+
 ```
 
 ### SSH to EC2 instance
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html
-How obtain Public DNS from CLI? ec2-52-13-102-212.us-west-2.compute.amazonaws.com
+
 ```shell
-ssh -i MyKeyPair.pem ec2-user@ec2-52-13-102-212.us-west-2.compute.amazonaws.com
+ssh -i MyKeyPair.pem ec2-user@$PUBLIC_DNS_NAME
 
 # Now in EC2 instance
 sudo yum update -y  # ensure most recent packages installed on instance
 sudo amazon-linux-extras install docker # how avoid user input for yes?
+sudo service docker start
 sudo usermod -a -G docker ec2-user
-su -s ec2-user # instead of the following
-###
-# exit
-# # back to aws prompt
-# ssh -i MyKeyPair.pem ec2-user@ec2-52-13-102-212.us-west-2.compute.amazonaws.com
-# # Now in EC2 instance
-service docker start
+## su -s ec2-user # could use instead of the following, but don't know password
+exit
+# back to local prompt in aws directory
+ssh -i MyKeyPair.pem ec2-user@$PUBLIC_DNS_NAME
+# Now in EC2 instance
 docker pull registry.hub.docker.com/ej838639/lazarus:1.7
 docker run \
 --name lazarus_1_7 \
@@ -150,9 +175,21 @@ docker run \
 -d \
 ej838639/lazarus:1.7
 
-export PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
-echo $PUBLIC_IP
+exit
 
+# back at local prompt in aws directory
+echo $HYPERLINK
+# click on hyperlink to access api
+```
+
+### Terminate Instance and cleanup
+When need to delete instance
+```shell
+aws ec2 terminate-instances \
+--instance-ids $INSTANCE_ID
+
+aws ec2 delete-security-group \
+--group-name $SECURITY_GROUP
 ```
 
 ## Open Source Tools
