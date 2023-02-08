@@ -193,6 +193,7 @@ aws ec2 delete-security-group \
 ```
 
 ## Open Source Tools
+Eventually building toward this:
 https://aws.amazon.com/blogs/opensource/deploying-python-flask-microservices-to-aws-using-open-source-tools/
 
 ### Create Elastic Container Registry (ECR)
@@ -200,34 +201,49 @@ https://aws.amazon.com/blogs/opensource/deploying-python-flask-microservices-to-
 ```shell
 export REGION="us-west-2"
 export AWS_ID="254394382277"
+PROJECT="lazarus"
+VERSION="1.7"
 
 aws ecr create-repository \
---repository-name lazarus-app \
+--repository-name $PROJECT-app \
 --image-scanning-configuration scanOnPush=true \
 --region $REGION
 
-aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $AWS_ID.dkr.ecr.$REGION.amazonaws.com/lazarus-app
+aws ecr get-login-password \
+--region $REGION | \
+docker login \
+--username AWS \
+--password-stdin $AWS_ID.dkr.ecr.$REGION.amazonaws.com/$PROJECT-app
 
 ```
 
 ### Push docker image
 ```shell
-docker tag ej838639/lazarus:1.7 $AWS_ID.dkr.ecr.$REGION.amazonaws.com/lazarus-app:1.7
-docker push $AWS_ID.dkr.ecr.$REGION.amazonaws.com/lazarus-app:1.7
+docker tag ej838639/$PROJECT:$VERSION $AWS_ID.dkr.ecr.$REGION.amazonaws.com/$PROJECT-app:$VERSION
+docker push $AWS_ID.dkr.ecr.$REGION.amazonaws.com/$PROJECT-app:$VERSION
 
 ```
 
 ### Terraform
 cd to terraform folder
 ```shell
-terraform init
+terraform init # if not already initialized
 terraform plan
-# ECR Image URL: $AWS_ID.dkr.ecr.$REGION.amazonaws.com/lazarus-app
+# ECR Image URL: $AWS_ID.dkr.ecr.$REGION.amazonaws.com/$PROJECT-app
 # ECR Image URL: 254394382277.dkr.ecr.us-west-2.amazonaws.com/lazarus-app
 terraform apply
-# alb_dns_name = "ecsalb-1930855968.us-west-2.elb.amazonaws.com"
-
 
 ```
 
-http://ecsalb-1930855968.us-west-2.elb.amazonaws.com/quiz_create
+### Test
+Test if can SSH into instance
+
+```shell
+chmod 400 tf-key-pair-name.pem
+PUBLIC_DNS_NAME=`aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=$PROJECT" \
+--query "Reservations[*].Instances[*].PublicDnsName" \
+--output text`
+
+ssh -i tf-key-pair-name.pem ec2-user@$PUBLIC_DNS_NAME
+```
