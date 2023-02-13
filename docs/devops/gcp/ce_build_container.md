@@ -25,7 +25,7 @@ name: lazarus
 Machine type: e2-micro
 Container section: click Deploy Container. 
 Container image:
-$LOCATION-docker.pkg.dev/$PROJECT/$REPO/lazarus:1.7
+$LOCATION-docker.pkg.dev/$PROJECT/$REPO/lazarus:latest
 
 In search bar, search for "firewall rules"
 Click "Firewall: VPC network"
@@ -45,10 +45,10 @@ docker ps # see container running
 docker stop (container number)
 
 docker run \
---name lazarus_1_7 \
+--name lazarus \
 -e FLASK_ENV=production \
 -d \
-$LOCATION-docker.pkg.dev/$PROJECT/$REPO/lazarus:1.7
+$LOCATION-docker.pkg.dev/$PROJECT/$REPO/lazarus:latest
 ```
 
 ## CLI
@@ -60,6 +60,7 @@ export LOCATION="us-west3"
 export ZONE="us-west3-c"
 export REPO="lazarus-docker-repo"
 
+# if project not setup:
 gcloud compute project-info add-metadata \
 --metadata google-compute-default-region=$LOCATION,google-compute-default-zone=$ZONE
 
@@ -74,23 +75,23 @@ gcloud config get-value compute/zone
 ```shell
 gcloud services list
 
-# if artifactregistry not activated, then run:
+# if artifact registry not activated:
 gcloud services enable \
 artifactregistry.googleapis.com \
 --project=${PROJECT_ID}
 
+# if repo not already created:
 gcloud artifacts repositories create $REPO \
 --repository-format=docker \
 --location=${LOCATION} --description="Lazarus Docker repository"
 
 gcloud artifacts repositories list
 gcloud auth configure-docker ${LOCATION}-docker.pkg.dev
-docker tag registry.hub.docker.com/ej838639/lazarus:1.7 \
-${LOCATION}-docker.pkg.dev/${PROJECT_ID}/$REPO/lazarus:1.7
+docker tag ej838639/lazarus:latest \
+${LOCATION}-docker.pkg.dev/${PROJECT_ID}/$REPO/lazarus:latest
 
-docker push ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/$REPO/lazarus:1.7
+docker push ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/$REPO/lazarus:latest
 
-docker pull ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/$REPO/lazarus:1.7
 ```
 
 ### Create Compute Engine instance
@@ -104,7 +105,7 @@ gcloud services enable compute.googleapis.com
 
 gcloud compute instances create-with-container $INSTANCE_NAME \
 --machine-type e2-micro \
---container-image $LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO/lazarus:1.7 \
+--container-image $LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO/lazarus:latest \
 --container-env FLASK_ENV=production \
 --tags allow-flask,http-server
 

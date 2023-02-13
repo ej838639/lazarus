@@ -68,11 +68,11 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-keypairs.html
 Create an aws directory outside the project to store the key pair. cd into the dir
 ```shell
 aws ec2 create-key-pair \
---key-name MyKeyPair \
+--key-name my-key-pair \
 --query 'KeyMaterial' \
---output text > MyKeyPair.pem
+--output text > my-key-pair.pem
 
-chmod 400 MyKeyPair.pem
+chmod 400 my-key-pair.pem
 ```
 
 ### Variables
@@ -148,6 +148,7 @@ PUBLIC_IP=`aws ec2 describe-instances \
 
 # hyperlink to run app
 HYPERLINK="http://$PUBLIC_IP:3000/quiz_create"
+echo $HYPERLINK
 
 ```
 
@@ -155,25 +156,24 @@ HYPERLINK="http://$PUBLIC_IP:3000/quiz_create"
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html
 
 ```shell
-ssh -i MyKeyPair.pem ec2-user@$PUBLIC_DNS_NAME
+chmod 400 my-key-pair.pem
+ssh -i my-key-pair.pem ec2-user@$PUBLIC_DNS_NAME
 
 # Now in EC2 instance
 sudo yum update -y  # ensure most recent packages installed on instance
-sudo amazon-linux-extras install docker # how avoid user input for yes?
+sudo amazon-linux-extras install docker -y # how avoid user input for yes?
 sudo service docker start
-sudo usermod -a -G docker ec2-user
-## su -s ec2-user # could use instead of the following, but don't know password
-exit
-# back to local prompt in aws directory
-ssh -i MyKeyPair.pem ec2-user@$PUBLIC_DNS_NAME
-# Now in EC2 instance
-docker pull registry.hub.docker.com/ej838639/lazarus:1.7
+sudo useradd docker_runner
+sudo passwd -d docker_runner
+sudo usermod -a -G docker docker_runner
+su - docker_runner
+docker pull registry.hub.docker.com/ej838639/lazarus:latest
 docker run \
---name lazarus_1_7 \
+--name lazarus \
 -p 3000:3000 \
 -e FLASK_ENV=production \
 -d \
-ej838639/lazarus:1.7
+ej838639/lazarus:latest
 
 exit
 
@@ -202,8 +202,9 @@ https://aws.amazon.com/blogs/opensource/deploying-python-flask-microservices-to-
 export REGION="us-west-2"
 export AWS_ID="254394382277"
 PROJECT="lazarus"
-VERSION="1.7"
+VERSION="latest"
 
+# if not already done, create ECR repository
 aws ecr create-repository \
 --repository-name $PROJECT-app \
 --image-scanning-configuration scanOnPush=true \
@@ -217,7 +218,7 @@ docker login \
 
 ```
 
-### Push docker image
+### Push docker image to ECR
 ```shell
 docker tag ej838639/$PROJECT:$VERSION $AWS_ID.dkr.ecr.$REGION.amazonaws.com/$PROJECT-app:$VERSION
 docker push $AWS_ID.dkr.ecr.$REGION.amazonaws.com/$PROJECT-app:$VERSION
@@ -229,21 +230,9 @@ cd to terraform folder
 ```shell
 terraform init # if not already initialized
 terraform plan
-# ECR Image URL: $AWS_ID.dkr.ecr.$REGION.amazonaws.com/$PROJECT-app
-# ECR Image URL: 254394382277.dkr.ecr.us-west-2.amazonaws.com/lazarus-app
 terraform apply
 
 ```
 
-### Test
-Test if can SSH into instance
-
-```shell
-chmod 400 tf-key-pair-name.pem
-PUBLIC_DNS_NAME=`aws ec2 describe-instances \
---filters "Name=tag:Name,Values=$PROJECT" \
---query "Reservations[*].Instances[*].PublicDnsName" \
---output text`
-
-ssh -i tf-key-pair-name.pem ec2-user@$PUBLIC_DNS_NAME
-```
+### Testing
+Click on hyperlink to confirm it is accessible.
