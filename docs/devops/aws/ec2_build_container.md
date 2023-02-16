@@ -49,8 +49,8 @@ Scroll down to last inbound rule. Leave it as Custom TCP. Port Range 3000.
 Leave it as 0.0.0.0/0 that allows any IPv4 inbound location
 
 ### Test endpoint
-From console, collect the public IP. Combine with port and API endpoint.
-http://35.92.132.81:3000/quiz_create
+From console, collect the public IP. Combine with port and API endpoint.  
+http://[PUBLIC_IP]/quiz_create
 
 ## CLI
 If not already done, create access key and configure AWS CLI
@@ -85,10 +85,10 @@ PROJECT='lazarus'
 ```
 
 ### Create Security Group
-https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-sg.html
+https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-sg.html  
 (This was configured automatically in the console.)
 
-Manually create Security Group
+Manually create Security Group  
 https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html
 ```shell
 SECURITY_GROUP=`aws ec2 create-security-group \
@@ -115,11 +115,11 @@ SECURITY_GROUP=`aws ec2 describe-security-groups \
 ```
 
 ### Create EC2 instance
-Launch instance
+Launch instance  
 https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-instances.html
 
-Find an AMI
-https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/finding-an-ami.html
+Find an AMI  
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/finding-an-ami.html  
 Use the same AMI recommended for Linux when creating the instance in the console
 ```shell
 aws ec2 run-instances \
@@ -194,7 +194,7 @@ aws ec2 delete-security-group \
 ```
 
 ## Open Source Tools
-Eventually building toward this:
+Eventually building toward this:  
 https://aws.amazon.com/blogs/opensource/deploying-python-flask-microservices-to-aws-using-open-source-tools/
 
 ### Create Elastic Container Registry (ECR)
@@ -238,4 +238,4 @@ terraform apply "lazarus.plan"
 ```
 
 ### Testing
-Click on hyperlink to confirm it is accessible.
+Click on hyperlink output from Terraform to confirm the app is accessible.

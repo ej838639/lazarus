@@ -1,44 +1,44 @@
 # Create Compute Engine instance and build docker container
 
 ## Console
-Project: (use project for lazarus)
-LOCATION: "us-west3"
-ZONE: "us-west3-c"
-REPO: "lazarus-docker-repo"
+Project: (use project for lazarus)  
+LOCATION: "us-west3"  
+ZONE: "us-west3-c"  
+REPO: "lazarus-docker-repo"  
 
 ### Setup environment
-Set region/zone
-https://cloud.google.com/compute/docs/gcloud-compute#default-region-zone
-https://cloud.google.com/compute/docs/regions-zones
-us-west1 The Dalles, OR
-us-west2 LA, CA
-us-west3 SLC, UT
-us-west4 LV, NV
+Set region/zone  
+https://cloud.google.com/compute/docs/gcloud-compute#default-region-zone  
+https://cloud.google.com/compute/docs/regions-zones  
+us-west1 The Dalles, OR  
+us-west2 LA, CA  
+us-west3 SLC, UT  
+us-west4 LV, NV  
 
 ### Upload container to Artifact Repository
 https://cloud.google.com/artifact-registry/docs/docker/store-docker-container-images
 
 ### Create Compute Engine instance
-Navigate to Cloud Engine: VM instances
-Create instance
-name: lazarus
-Machine type: e2-micro
-Container section: click Deploy Container. 
-Container image:
+Navigate to Cloud Engine: VM instances  
+Create instance  
+name: lazarus  
+Machine type: e2-micro  
+Container section: click Deploy Container.  
+Container image:  
 $LOCATION-docker.pkg.dev/$PROJECT/$REPO/lazarus:latest
 
-In search bar, search for "firewall rules"
-Click "Firewall: VPC network"
-Click "Create Firewall Rule"
-name it: "allow-flask"
-target tags "allow-flask"
-source IPv4 ranges: 0.0.0.0/0
-check TCP and include port 3000
+In search bar, search for "firewall rules"  
+Click "Firewall: VPC network"  
+Click "Create Firewall Rule"  
+name it: "allow-flask"  
+target tags "allow-flask"  
+source IPv4 ranges: 0.0.0.0/0  
+check TCP and include port 3000  
 click Create
 
-Navigate to Cloud Engine: VM Instances
-Collect the "Internal IP" for the lazarus container
-Click on "SSH" for lazarus container
+Navigate to Cloud Engine: VM Instances  
+Collect the "Internal IP" for the lazarus container  
+Click on "SSH" for lazarus container  
 
 ```sh
 docker ps # see container running

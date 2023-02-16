@@ -4,16 +4,13 @@
 
 ## Context and Problem Statement
 
-The goal of Lazarus is to learn about the steps and tools required to operate software.
+The goal of Lazarus is to learn about the steps and tools required to operate software.  
 Especially, how DevOps tools and practices can make that process easier.
 
-To that end, it's important that
-the contributors to this project
-understand the tradeoffs and alternatives
-to the tools and practices they choose.
+To that end, it's important that the contributors to this project
+understand the tradeoffs and alternatives to the tools and practices they choose.
 
-It's easy for thoughts and ideas around this understanding to be lost.
-Thus some kind of documentation is vital.
+It's easy for thoughts and ideas around this understanding to be lost. Thus some kind of documentation is vital.
 
 ## Considered Options
 
