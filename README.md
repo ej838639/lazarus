@@ -2,7 +2,7 @@
 Learn DevOps by creating and deploying an app. 
 
 **Primary Goal:** Learn how to use DevOps tools and processes.  
-**Means to Achieve the Goal**: Build a quiz-creation API. 
+**Means to Achieve the Goal**: Build a quiz-creation app.
 
 Let's work together to build out the devops infrastructure for this app! Contact eric.johnson838639@gmail.com if you want to collaborate on this project.
 
@@ -18,7 +18,7 @@ App to easily turn training material into a quiz on your favorite quiz platform.
 ## How to run the app on your computer
 Run with a Docker container or run in Python.
 ### Pull and run Docker container 
-Install Docker and then run the following commands.
+[Install Docker](https://docs.docker.com/get-docker/) and then run the following commands.
 ```shell
 docker pull registry.hub.docker.com/ej838639/lazarus:latest
 docker run \
@@ -36,9 +36,11 @@ Install Python 3.10.6. No validation done to determine if it may run on earlier 
 Navigate to a folder where you want to put the project.
 ```shell
 git clone https://github.com/ej838639/lazarus.git
+cd lazarus
+pip install -r requirements.txt
 export FLASK_APP=app.py
 export FLASK_ENV=development
-cd lazarus/server
+cd server
 flask run --host=localhost --port=3000
 
 ```
