@@ -2,11 +2,19 @@
 Main code for lazarus project.
 https://github.com/ej838639/lazarus
 
+Development:
 Open terminal and run:
 export FLASK_APP=app.py
 export FLASK_ENV=development
 cd server
 flask run --host=localhost --port=3000
+
+Open browser and enter:
+http://localhost:3000/quiz_create
+
+Production:
+Open terminal and run:
+waitress-serve --port=3000 app:app
 
 Open browser and enter:
 http://localhost:3000/quiz_create
@@ -25,6 +33,7 @@ Heap Sort,O(1)
 import pandas as pd
 from io import StringIO
 from flask import Flask, render_template, request, url_for, redirect
+from waitress import serve
 # from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -142,3 +151,7 @@ class TableCalc:
 
             # more than one col2 value, and multiple rows have the same value:
             # choose MCM format using most common col2 value. If multiple are most common, choose any.
+
+if __name__ == "__main__":
+    # app.run('0.0.0.0', port=3000)
+    serve(app, port=3000)

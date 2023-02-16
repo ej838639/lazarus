@@ -1,7 +1,23 @@
 # Docker commands
 
-## Docker build
-Create with version number to clearly show version used for latest
+## Development
+
+### Dockerfile
+```shell
+FROM python:3.10  
+WORKDIR /usr/src/lazarus  
+COPY requirements.txt .  
+RUN pip install -r requirements.txt  
+COPY server/ server/  
+ENV FLASK_APP=server/app  
+ENV PORT=3000  
+EXPOSE 3000  
+CMD [ "python", "-m", "flask", "run", "--host=0.0.0.0", "--port=3000" ]
+
+```
+
+## Docker build and run
+
 ```shell
 docker build \
 -t ej838639/lazarus:latest \
@@ -9,37 +25,40 @@ docker build \
 --platform linux/amd64 \ # only needed if building from a mac
 .
 
-```
-
-## Docker run
-
-Development
-```shell
 docker run \
---name lazarus_latest \
+--name lazarus \
 -p 3000:3000 \
 -e FLASK_ENV=development \
 -d \
 ej838639/lazarus:latest
-
 ```
+
 http://localhost:3000/quiz_create
 
-Production
+## Production
+
+### Dockerfile
 ```shell
-docker run \
---name lazarus_latest \
--p 3000:3000 \
--e FLASK_ENV=production \
--d \
-ej838639/lazarus:latest
+FROM python:3.10
+WORKDIR /usr/src/lazarus
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY server/ server/
+EXPOSE 3000
+CMD [ "waitress-serve", "--port=3000", "server.app:app" ]
 
 ```
-
-## Docker push
+### Docker build and run
 ```shell
-docker login
-docker push ej838639/lazarus:1.7
-docker push ej838639/lazarus:latest
+docker build \
+-t ej838639/lazarus:latest \
+-t ej838639/lazarus:1.8 \
+.
+
+docker run \
+--name lazarus_1_8 \
+-p 3000:3000 \
+-d \
+ej838639/lazarus:1.8
 
 ```

@@ -1,11 +1,14 @@
 # Ignore Mac system files
 .DS_store
+
+# Files to ignore
 *.tfstate
 *.backup
 *.hcl
 *.pem
+*.plan
 
-# folders to ignore
+# Folders to ignore
 .idea/
 diagrams/
 __pycache__/

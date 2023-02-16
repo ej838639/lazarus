@@ -86,7 +86,6 @@ resource "aws_instance" "lazarus" {
   docker run \
   --name lazarus \
   -p 3000:3000 \
-  -e FLASK_ENV=production \
   -d \
   ej838639/lazarus:latest
 

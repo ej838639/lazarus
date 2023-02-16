@@ -24,17 +24,19 @@ Need to exit and reconnect for usermod change to take effect
 Close instance tab  
 In Console, click Connect to open EC2 instance again
 ```sh
-docker pull registry.hub.docker.com/ej838639/lazarus:1.7
-docker images  # confirm image pulled
-docker build -t ej838639/lazarus:1.7 .
+sudo yum update -y
+sudo amazon-linux-extras install docker -y
+sudo service docker start
+sudo useradd docker_runner
+sudo passwd -d docker_runner
+sudo usermod -a -G docker docker_runner
+su - docker_runner
+docker pull registry.hub.docker.com/ej838639/lazarus:latest
 docker run \
---name lazarus_1_7 \
+--name lazarus \
 -p 3000:3000 \
--e FLASK_ENV=production \
 -d \
-ej838639/lazarus:1.7 
-docker ps  # confirm container running
-exit
+ej838639/lazarus:latest
 ```
 
 ### Create inbound rule
@@ -160,8 +162,8 @@ chmod 400 my-key-pair.pem
 ssh -i my-key-pair.pem ec2-user@$PUBLIC_DNS_NAME
 
 # Now in EC2 instance
-sudo yum update -y  # ensure most recent packages installed on instance
-sudo amazon-linux-extras install docker -y # how avoid user input for yes?
+sudo yum update -y
+sudo amazon-linux-extras install docker -y
 sudo service docker start
 sudo useradd docker_runner
 sudo passwd -d docker_runner
@@ -171,7 +173,6 @@ docker pull registry.hub.docker.com/ej838639/lazarus:latest
 docker run \
 --name lazarus \
 -p 3000:3000 \
--e FLASK_ENV=production \
 -d \
 ej838639/lazarus:latest
 
@@ -201,8 +202,8 @@ https://aws.amazon.com/blogs/opensource/deploying-python-flask-microservices-to-
 ```shell
 export REGION="us-west-2"
 export AWS_ID="254394382277"
-PROJECT="lazarus"
-VERSION="latest"
+export PROJECT="lazarus"
+export VERSION="latest"
 
 # if not already done, create ECR repository
 aws ecr create-repository \
@@ -228,9 +229,11 @@ docker push $AWS_ID.dkr.ecr.$REGION.amazonaws.com/$PROJECT-app:$VERSION
 ### Terraform
 cd to terraform folder
 ```shell
-terraform init # if not already initialized
-terraform plan
-terraform apply
+# if not already initialized
+terraform init 
+
+terraform plan -out=lazarus.plan
+terraform apply "lazarus.plan"
 
 ```
 
