@@ -30,6 +30,10 @@ docker run \
 -e FLASK_ENV=development \
 -d \
 ej838639/lazarus:latest
+
+docker login
+docker push ej838639/lazarus:1.7
+docker push ej838639/lazarus:latest
 ```
 
 http://localhost:3000/quiz_create
@@ -51,13 +55,18 @@ CMD [ "waitress-serve", "--port=3000", "server.app:app" ]
 ```shell
 docker build \
 -t ej838639/lazarus:latest \
--t ej838639/lazarus:1.8 \
+-t ej838639/lazarus:1.9 \
+--platform linux/amd64 \
 .
 
 docker run \
---name lazarus_1_8 \
+--name lazarus_1_9 \
 -p 3000:3000 \
 -d \
-ej838639/lazarus:1.8
+ej838639/lazarus:1.9
+
+docker login
+docker push ej838639/lazarus:1.9
+docker push ej838639/lazarus:latest
 
 ```
