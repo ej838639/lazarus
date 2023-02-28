@@ -10,14 +10,14 @@ cd server
 flask run --host=localhost --port=3000
 
 Open browser and enter:
-http://localhost:3000/quiz_create
+http://localhost:3000
 
 Production:
 Open terminal and run:
-waitress-serve --port=3000 app:app
+waitress-serve --port=80 app:app
 
 Open browser and enter:
-http://localhost:3000/quiz_create
+http://localhost
 
 Test Case string input:
 Sorting Algorithm,Space Complexity
@@ -51,13 +51,13 @@ app = Flask(__name__)
 # db.create_all()
 
 
-@app.route('/quiz_create')
+@app.route('/')
 def main():
 
     return render_template('main.html')
 
 
-@app.route('/quiz_create/submit', methods=('GET', 'POST'))
+@app.route('/submit', methods=('GET', 'POST'))
 def submit():
     if request.method == 'POST':
         input1 = request.form['input1']
@@ -67,7 +67,7 @@ def submit():
     return render_template('submit.html')
 
 
-@app.route('/quiz_create/result')
+@app.route('/result')
 def result_get():
     # input1 = request.args['input1']
 
@@ -154,4 +154,4 @@ class TableCalc:
 
 if __name__ == "__main__":
     # app.run('0.0.0.0', port=3000)
-    serve(app, port=3000)
+    serve(app, port=80)

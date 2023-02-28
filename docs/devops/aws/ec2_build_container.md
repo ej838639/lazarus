@@ -34,7 +34,7 @@ su - docker_runner
 docker pull registry.hub.docker.com/ej838639/lazarus:latest
 docker run \
 --name lazarus \
--p 3000:3000 \
+-p 80:80 \
 -d \
 ej838639/lazarus:latest
 ```
@@ -45,7 +45,7 @@ Go to security tab (middle bottom of page)
 Click on Security group link  
 Edit inbound rules  
 Add rule  
-Scroll down to last inbound rule. Leave it as Custom TCP. Port Range 3000.  
+Scroll down to last inbound rule. Leave it as Custom TCP. Port Range 80.  
 Leave it as 0.0.0.0/0 that allows any IPv4 inbound location
 
 ### Test endpoint
@@ -63,6 +63,11 @@ https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 ```shell
 which aws  # should show /usr/local/bin/aws
 aws configure  # enter credentials
+
+aws configure list
+
+# Show current region
+aws configure get region
 ```
 
 ### Create Key Pair
@@ -104,7 +109,7 @@ aws ec2 authorize-security-group-ingress \
 
 aws ec2 authorize-security-group-ingress \
 --group-id $SECURITY_GROUP \
---ip-permissions IpProtocol=tcp,FromPort=3000,ToPort=3000,IpRanges="[{CidrIp=0.0.0.0/0,Description='Docker port for a Flask app'}]"
+--ip-permissions IpProtocol=tcp,FromPort=80,ToPort=80,IpRanges="[{CidrIp=0.0.0.0/0,Description='Docker port for a Flask app'}]"
 
 # if needed to set SECURITY_GROUP variable 
 SECURITY_GROUP=`aws ec2 describe-security-groups \
@@ -149,7 +154,7 @@ PUBLIC_IP=`aws ec2 describe-instances \
 --output text`
 
 # hyperlink to run app
-HYPERLINK="http://$PUBLIC_IP:3000/quiz_create"
+HYPERLINK="http://$PUBLIC_IP"
 echo $HYPERLINK
 
 ```
@@ -172,7 +177,7 @@ su - docker_runner
 docker pull registry.hub.docker.com/ej838639/lazarus:latest
 docker run \
 --name lazarus \
--p 3000:3000 \
+-p 80:80 \
 -d \
 ej838639/lazarus:latest
 

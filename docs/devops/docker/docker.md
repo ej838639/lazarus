@@ -47,26 +47,26 @@ WORKDIR /usr/src/lazarus
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY server/ server/
-EXPOSE 3000
-CMD [ "waitress-serve", "--port=3000", "server.app:app" ]
+EXPOSE 80
+CMD [ "waitress-serve", "--port=80", "server.app:app" ]
 
 ```
 ### Docker build and run
 ```shell
 docker build \
 -t ej838639/lazarus:latest \
--t ej838639/lazarus:1.9 \
+-t ej838639/lazarus:1.10 \
 --platform linux/amd64 \
 .
 
 docker run \
---name lazarus_1_9 \
--p 3000:3000 \
+--name lazarus_1_10 \
+-p 80:80 \
 -d \
-ej838639/lazarus:1.9
+ej838639/lazarus:1.10
 
 docker login
-docker push ej838639/lazarus:1.9
+docker push ej838639/lazarus:1.10
 docker push ej838639/lazarus:latest
 
 ```
