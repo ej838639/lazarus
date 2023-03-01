@@ -86,7 +86,10 @@ chmod 400 my-key-pair.pem
 ```shell
 SMALLEST_INSTANCE='t2.micro'
 LINUX_OS='ami-06e85d4c3149db26a'
-PROJECT='lazarus'
+PROJECT='lazarus2'
+REGION="us-west-2"
+AWS_ID="254394382277"
+VERSION="latest"
 ```
 
 ### Create Security Group
@@ -205,11 +208,6 @@ https://aws.amazon.com/blogs/opensource/deploying-python-flask-microservices-to-
 ### Create Elastic Container Registry (ECR)
 
 ```shell
-export REGION="us-west-2"
-export AWS_ID="254394382277"
-export PROJECT="lazarus"
-export VERSION="latest"
-
 # if not already done, create ECR repository
 aws ecr create-repository \
 --repository-name $PROJECT-app \
