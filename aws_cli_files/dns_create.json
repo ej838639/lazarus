@@ -1,0 +1,13 @@
+{
+  "Comment": "CREATE a record ",
+  "Changes": [{
+    "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "sntxrr.org",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [{ "Value": "44.233.103.55"}, { "Value": "54.214.70.170"}]
+      }
+    }
+  ]
+}
