@@ -13,7 +13,7 @@ locals {
   zone_c = "${local.region}c"
   smallest_instance = "t2.micro"
   linux_os = "ami-06e85d4c3149db26a"
-  project = "lazarus2"
+  project = "lazarus-prod"
 }
 
 resource "aws_key_pair" "my-key-pair" {

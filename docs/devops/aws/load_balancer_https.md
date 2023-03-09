@@ -6,8 +6,6 @@ The following assumes that there is an EC2 instance with the Lazarus app in Avai
 https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancer-getting-started.html
 https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html
 
-https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html
-
 ## Console
 
 ### Create Elastic IP Address
@@ -83,17 +81,6 @@ Check for when "healthy" targets matches the "total targets". This may take a fe
 Continue the following steps while you wait.  
 If the targets are "unhealthy", see the troubleshooting section below.
 
-### Update Security Group Rules
-Needed? Not forwarding https traffic to EC2 instance
-
-In the load balancer, click on the Security tab.
-Click on the security group for this ALB
-In the Inbound rules, click Edit inbound rules
-At the bottom, click Add rule
-In type, select HTTPS
-Description: HTTPS for Docker container port for Flask app
-Source: 0.0.0.0/0
-
 ### Create Application Load Balancer
 Load Balancer Name: lazarus-lb
 
@@ -147,6 +134,8 @@ Application Load Balancer: lazarus-lb
 Click Create Load Balancer
 
 ### Create Network Load Balancer
+https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancer-cli.html  
+
 In EC2, in the bottom-left navigation, select Load Balancers  
 Click Create load balancer  
 Select Network Load Balancer  
@@ -190,23 +179,41 @@ https://docs.aws.amazon.com/elasticloadbalancing/latest/application/tutorial-app
 
 Variables
 ```shell
-PROJECT='lazarus'
+PROJECT='lazarus-prod'
+DOMAIN="sntxrr.org"
 REGION="us-west-2"
 ZONE_B="${REGION}b"
 ZONE_C="${REGION}c"
 HOSTED_ZONE_ID="Z05234763LM5P4JGVQ78Q"
 DNS_RECORD_CREATE_FILENAME="file://dns_create.json"
-LOAD_BALANCER="${PROJECT}-lb"
+LOAD_BALANCER_NAME_ALB="${PROJECT}-lb"
+LOAD_BALANCER_NAME_NLB="${PROJECT}-network-lb"
 TARGET_GROUP_ALB_HTTP="${PROJECT}-alb-http-group"
 TARGET_GROUP_NLB_HTTP="${PROJECT}-nlb-http-group"
-TARGET_GROUP_NLB_HTTPS="${PROJECT}-nlb-http-group"
+TARGET_GROUP_NLB_HTTPS="${PROJECT}-nlb-https-group"
 
 ```
 
 ### Create Elastic IPs
 
-44.233.103.55
-54.214.70.170
+ELASTIC_IP_B="44.233.103.55"
+ELASTIC_IP_C="54.214.70.170"
+
+```shell
+aws ec2 allocate-address \
+--tag-specifications "ResourceType=elastic-ip,Tags=[{Key=lazarus,Value=lazarus},{Key=zone_a,Value=zone_a}]"
+
+ELASTIC_ALLOCATION_ID_B=`aws ec2 describe-addresses \
+--filters "Name=tag-key, Values=zone_b" \
+--query "Addresses[*].AllocationId" \
+--output text`
+
+ELASTIC_ALLOCATION_ID_C=`aws ec2 describe-addresses \
+--filters "Name=tag-key, Values=zone_c" \
+--query "Addresses[*].AllocationId" \
+--output text`
+
+```
 
 ### Route 53 add record with Elastic IPs
 https://aws.amazon.com/premiumsupport/knowledge-center/simple-resource-record-route53-cli/
@@ -237,6 +244,27 @@ aws route53 change-resource-record-sets \
 
 ```
 
+### Request an SSL certificate
+https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html#request-public-cli
+https://docs.aws.amazon.com/cli/latest/reference/acm/list-certificates.html
+
+```shell
+aws acm request-certificate \
+--domain-name $DOMAIN \
+--key-algorithm RSA_2048 \
+--validation-method DNS \
+--idempotency-token 1234 \
+--options CertificateTransparencyLoggingPreference=DISABLED \
+--tags $PROJECT
+
+CERTIFICATE_ARN=`aws acm list-certificates \
+--query "CertificateSummaryList[*].CertificateArn" \
+--output text`
+
+
+
+```
+
 ### Create http Target Group for ALB
 
 ```shell
@@ -246,12 +274,12 @@ VPC_ID=`aws ec2 describe-vpcs \
 --output text`
 
 aws elbv2 create-target-group \
---name $$TARGET_GROUP_ALB_HTTP \
+--name $TARGET_GROUP_ALB_HTTP \
 --protocol HTTP \
 --port 80 \
 --vpc-id $VPC_ID \
 --ip-address-type ipv4 \
---tags=${PROJECT}
+--tags "Key=$PROJECT"
 
 TARGET_GROUP_ARN_ALB_HTTP=`aws elbv2 describe-target-groups \
 --names $TARGET_GROUP_ALB_HTTP \
@@ -293,25 +321,41 @@ SECURITY_GROUP=`aws ec2 describe-security-groups \
 --output text`
 
 aws elbv2 create-load-balancer \
---name ${LOAD_BALANCER} \
+--name ${LOAD_BALANCER_NAME_ALB} \
 --subnets $SUBNET_B $SUBNET_C \
---security-groups $SECURITY_GROUP
+--security-groups $SECURITY_GROUP \
+--tags "Key=$PROJECT"
 
 LOAD_BALANCER_ARN_ALB=`aws elbv2 describe-load-balancers \
---names ${LOAD_BALANCER} \
+--names ${LOAD_BALANCER_NAME_ALB} \
 --query "LoadBalancers[*].LoadBalancerArn" \
 --output text`
 
-LOAD_BALANCER_DNS_NAME=`aws elbv2 describe-load-balancers \
---names ${LOAD_BALANCER} \
+LOAD_BALANCER_DNS_NAME_ALB=`aws elbv2 describe-load-balancers \
+--names ${LOAD_BALANCER_NAME_ALB} \
 --query "LoadBalancers[*].DNSName" \
 --output text`
 
-# if only http
+```
+
+### ALB Create https listener toward http target group
+See "Add an HTTPS listener" section of:
+https://docs.aws.amazon.com/elasticloadbalancing/latest/application/tutorial-application-load-balancer-cli.html
+https://docs.aws.amazon.com/cli/latest/reference/elbv2/create-listener.html
+https://docs.aws.amazon.com/cli/latest/reference/elbv2/create-rule.html
+
+Create a https listener on the Application Load Balancer that forwards traffic to http on the EC2 instance
+```shell
+CERTIFICATE_ARN=`aws acm list-certificates \
+--query "CertificateSummaryList[*].CertificateArn" \
+--output text`
+
+# https traffic forward to http target group
 aws elbv2 create-listener \
 --load-balancer-arn $LOAD_BALANCER_ARN_ALB \
---protocol HTTP \
---port 80  \
+--protocol HTTPS \
+--port 443  \
+--certificates CertificateArn=$CERTIFICATE_ARN \
 --default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ARN_ALB_HTTP
 
 # redirect http to https
@@ -338,67 +382,101 @@ INSTANCE_C_HEALTH=`aws elbv2 describe-target-health \
 --query "TargetHealthDescriptions[*].TargetHealth.State" \
 --output text`
 
-TARGET_GROUP_ARN_ALB_HTTP=`aws elbv2 describe-target-groups \
---names lazarus-group \
---query "TargetGroups[*].TargetGroupArn" \
---output text`
-
-aws elbv2 describe-target-health \
---target-group-arn $TARGET_GROUP_ARN_ALB_HTTP \
---targets Id=$INSTANCE_ID_B \
---query "TargetHealthDescriptions[*].TargetHealth.State" \
---output text
-
-```
-
-### Request an SSL certificate
-https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html#request-public-cli
-https://docs.aws.amazon.com/cli/latest/reference/acm/list-certificates.html
-
-### Request Certificate and Validate with DNS
-```shell
-aws acm request-certificate \
---domain-name $DOMAIN \
---key-algorithm RSA_2048 \
---validation-method DNS \
---idempotency-token 1234 \
---options CertificateTransparencyLoggingPreference=DISABLED \
---tags lazarus
-
-CERTIFICATE_ARN=`aws acm list-certificates \
---query "CertificateSummaryList[*].CertificateArn" \
---output text`
-
-
-
-```
-
-### Add ALB HTTP Target Group and to HTTPS Listener
-See "Add an HTTPS listener" section of:
-https://docs.aws.amazon.com/elasticloadbalancing/latest/application/tutorial-application-load-balancer-cli.html
-https://docs.aws.amazon.com/cli/latest/reference/elbv2/create-listener.html
-https://docs.aws.amazon.com/cli/latest/reference/elbv2/create-rule.html
-
-Create an https listener on the Application Load Balancer that forwards traffic to http on the EC2 instance
-```shell
-aws elbv2 create-listener \
---load-balancer-arn $LOAD_BALANCER_ARN_ALB \
---protocol HTTPS \
---port 443  \
---certificates CertificateArn=$CERTIFICATE_ARN \
---default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ALB_HTTP
-
 ```
 
 ### Create a Network Load Balancer
 https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancer-cli.html  
 
 ```shell
+ELASTIC_ALLOCATION_ID_B=`aws ec2 describe-addresses \
+--filters "Name=tag-key, Values=zone_b" \
+--query "Addresses[*].AllocationId" \
+--output text`
 
+ELASTIC_ALLOCATION_ID_C=`aws ec2 describe-addresses \
+--filters "Name=tag-key, Values=zone_c" \
+--query "Addresses[*].AllocationId" \
+--output text`
+
+aws elbv2 create-load-balancer \
+--name $LOAD_BALANCER_NAME_NLB \
+--type network \
+--subnet-mappings SubnetId=$SUBNET_B,AllocationId=$ELASTIC_ALLOCATION_ID_B SubnetId=$SUBNET_C,AllocationId=$ELASTIC_ALLOCATION_ID_C \
+--tags "Key=$PROJECT"
+
+LOAD_BALANCER_ARN_NLB=`aws elbv2 describe-load-balancers \
+--names ${LOAD_BALANCER_NAME_NLB} \
+--query "LoadBalancers[*].LoadBalancerArn" \
+--output text`
+
+aws elbv2 create-target-group \
+--name $TARGET_GROUP_NLB_HTTP \
+--protocol TCP \
+--port 80 \
+--vpc-id $VPC_ID \
+--tags "Key=$PROJECT"
+
+TARGET_GROUP_ARN_NLB_HTTP=`aws elbv2 describe-target-groups \
+--names $TARGET_GROUP_NLB_HTTP \
+--query "TargetGroups[*].TargetGroupArn" \
+--output text`
+
+aws elbv2 create-target-group \
+--name $TARGET_GROUP_NLB_HTTPS \
+--protocol TCP \
+--port 443 \
+--vpc-id $VPC_ID \
+--tags "Key=$PROJECT"
+
+TARGET_GROUP_ARN_NLB_HTTPS=`aws elbv2 describe-target-groups \
+--names $TARGET_GROUP_NLB_HTTPS \
+--query "TargetGroups[*].TargetGroupArn" \
+--output text`
+
+aws elbv2 register-targets \
+--target-group-arn $TARGET_GROUP_ARN_NLB_HTTP  \
+--targets Id=$INSTANCE_ID_B Id=$INSTANCE_ID_C
+
+aws elbv2 register-targets \
+--target-group-arn $TARGET_GROUP_ARN_NLB_HTTPS  \
+--targets Id=$INSTANCE_ID_B Id=$INSTANCE_ID_C
+
+aws elbv2 create-listener \
+--load-balancer-arn $LOAD_BALANCER_ARN_NLB \
+--protocol TCP --port 80  \
+--default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ARN_NLB_HTTP \
+--tags "Key=$PROJECT"
+
+aws elbv2 create-listener \
+--load-balancer-arn $LOAD_BALANCER_ARN_NLB \
+--protocol TCP --port 443  \
+--default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ARN_NLB_HTTPS \
+--tags "Key=$PROJECT"
 
 ```
 
+### Test the https endpoint
+Check if the DNS record propagated and the SSL certificate propagated (see above in those sections).
 
+Test the https endpoint.
+https://sntxrr.org
+
+If necessary, see the troubleshooting section below
+
+### Delete configuration
+When ready, delete the configuration
+
+```shell
+aws elbv2 delete-load-balancer \
+--load-balancer-arn $LOAD_BALANCER_ARN_NLB
+
+aws elbv2 delete-target-group \
+--target-group-arn $TARGET_GROUP_ARN_NLB_HTTP
+
+aws elbv2 delete-target-group \
+--target-group-arn $TARGET_GROUP_ARN_NLB_HTTPS
+
+```
 
 ## Check if DNS Registered
 
@@ -427,8 +505,6 @@ sntxrr.org.             1800    IN      A       192.64.119.252
 
 
 ```
-
-
 
 ## Troubleshoot
 
