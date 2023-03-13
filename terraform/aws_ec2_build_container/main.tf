@@ -56,6 +56,14 @@ resource "aws_security_group" "api_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Port to receive https traffic on load balancers"
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     description = "Docker port for a Flask app"
     from_port        = 0

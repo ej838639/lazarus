@@ -109,32 +109,42 @@ Tags: lazarus
 
 Click Create Load Balancer
 
-### Create http Target Group for Network Load Balancer
+### Create TCP Port 80 Target Group for Network Load Balancer
+https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-network-load-balancer.html
+
 In EC2, in the bottom-left navigation, select Target Groups  
 Create Target Group  
-lazarus-network-lb-http-group
-Port: 80
-Health checks: http
-tag: lazarus
+Basic Configuration: Target Type: Application Load Balancer  
+Target Group Name: lazarus-prod-network-lb-http-group  
+Protocol: TCP (default)  
+Port: 80  
+Health checks: HTTP   
+tag: lazarus  
 Click Next
 
-Application Load Balancer: lazarus-lb  
-Click Create Load Balancer
+Application Load Balancer: lazarus-prod-lb  
+Click Create Target Group
 
-### Create https Target Group for Network Load Balancer
+### Create TCP Port 443 Target Group for Network Load Balancer
+https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-network-load-balancer.html
+https://docs.aws.amazon.com/elasticloadbalancing/latest/network/application-load-balancer-target.html
+
 In EC2, in the bottom-left navigation, select Target Groups  
 Create Target Group  
-lazarus-network-lb-https-group
-Port: 443
-Health checks: https
-tag: lazarus
+Basic Configuration: Target Type: Application Load Balancer  
+Target Group Name: lazarus-network-lb-https-group  
+Protocol: TCP (default)  
+Port: 443  
+Health checks: HTTPS  
+tag: lazarus  
 Click Next
 
 Application Load Balancer: lazarus-lb  
 Click Create Load Balancer
 
 ### Create Network Load Balancer
-https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancer-cli.html  
+https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-network-load-balancer.html
+https://docs.aws.amazon.com/elasticloadbalancing/latest/network/application-load-balancer-target.html
 
 In EC2, in the bottom-left navigation, select Load Balancers  
 Click Create load balancer  
@@ -386,6 +396,7 @@ INSTANCE_C_HEALTH=`aws elbv2 describe-target-health \
 
 ### Create a Network Load Balancer
 https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancer-cli.html  
+https://docs.aws.amazon.com/elasticloadbalancing/latest/network/application-load-balancer-target.html
 
 ```shell
 ELASTIC_ALLOCATION_ID_B=`aws ec2 describe-addresses \
@@ -411,9 +422,11 @@ LOAD_BALANCER_ARN_NLB=`aws elbv2 describe-load-balancers \
 
 aws elbv2 create-target-group \
 --name $TARGET_GROUP_NLB_HTTP \
+--target-type alb \
 --protocol TCP \
 --port 80 \
 --vpc-id $VPC_ID \
+--health-check-protocol HTTP \
 --tags "Key=$PROJECT"
 
 TARGET_GROUP_ARN_NLB_HTTP=`aws elbv2 describe-target-groups \
@@ -423,9 +436,11 @@ TARGET_GROUP_ARN_NLB_HTTP=`aws elbv2 describe-target-groups \
 
 aws elbv2 create-target-group \
 --name $TARGET_GROUP_NLB_HTTPS \
+--target-type alb \
 --protocol TCP \
 --port 443 \
 --vpc-id $VPC_ID \
+--health-check-protocol HTTPS \
 --tags "Key=$PROJECT"
 
 TARGET_GROUP_ARN_NLB_HTTPS=`aws elbv2 describe-target-groups \
@@ -435,21 +450,23 @@ TARGET_GROUP_ARN_NLB_HTTPS=`aws elbv2 describe-target-groups \
 
 aws elbv2 register-targets \
 --target-group-arn $TARGET_GROUP_ARN_NLB_HTTP  \
---targets Id=$INSTANCE_ID_B Id=$INSTANCE_ID_C
+--targets Id=$LOAD_BALANCER_ARN_ALB
 
 aws elbv2 register-targets \
 --target-group-arn $TARGET_GROUP_ARN_NLB_HTTPS  \
---targets Id=$INSTANCE_ID_B Id=$INSTANCE_ID_C
+--targets Id=$LOAD_BALANCER_ARN_ALB
 
 aws elbv2 create-listener \
 --load-balancer-arn $LOAD_BALANCER_ARN_NLB \
---protocol TCP --port 80  \
+--protocol TCP \
+--port 80  \
 --default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ARN_NLB_HTTP \
 --tags "Key=$PROJECT"
 
 aws elbv2 create-listener \
 --load-balancer-arn $LOAD_BALANCER_ARN_NLB \
---protocol TCP --port 443  \
+--protocol TCP \
+--port 443  \
 --default-actions Type=forward,TargetGroupArn=$TARGET_GROUP_ARN_NLB_HTTPS \
 --tags "Key=$PROJECT"
 
@@ -476,6 +493,11 @@ aws elbv2 delete-target-group \
 aws elbv2 delete-target-group \
 --target-group-arn $TARGET_GROUP_ARN_NLB_HTTPS
 
+aws elbv2 delete-load-balancer \
+--load-balancer-arn $LOAD_BALANCER_ARN_ALB
+
+aws elbv2 delete-target-group \
+--target-group-arn $TARGET_GROUP_ARN_ALB_HTTP
 ```
 
 ## Check if DNS Registered
