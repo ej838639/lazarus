@@ -15,3 +15,15 @@ resource "aws_lb_target_group" "target_group_alb_http" {
     Key=local.project
   }
 }
+
+resource "aws_lb_target_group_attachment" "tg_attachment_alb_http_b" {
+    target_group_arn = aws_lb_target_group.target_group_alb_http.arn
+    target_id        = aws_instance.lazarus_b.id
+    port             = 80
+}
+
+resource "aws_lb_target_group_attachment" "tg_attachment_alb_http_c" {
+    target_group_arn = aws_lb_target_group.target_group_alb_http.arn
+    target_id        = aws_instance.lazarus_c.id
+    port             = 80
+}
