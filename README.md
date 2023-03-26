@@ -23,13 +23,13 @@ Run with a Docker container or run in Python.
 docker pull registry.hub.docker.com/ej838639/lazarus:latest
 docker run \
 --name lazarus \
--p 3000:3000 \
+-p 80:80 \
 -d \
 ej838639/lazarus:latest
 
 ```
 Click on the following link to run the app
-http://localhost:3000/quiz_create
+http://localhost
 
 ### Clone repository and run Flask API in Python
 Install Python 3.10.6. No validation done to determine if it may run on earlier Python versions, but you are welcome to try older versions before upgrading.
@@ -45,7 +45,7 @@ flask run --host=localhost --port=3000
 
 ```
 Click on the following link to run the app
-http://localhost:3000/quiz_create
+http://localhost:3000
 
 ## Docs
 [Specification](https://github.com/ej838639/lazarus/blob/main/docs/spec.md)  
