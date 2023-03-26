@@ -575,8 +575,8 @@ Bucket name: ej838639-lazarus-access-logs
 ```
 
 ## Terraform
-Import SSL certificate
+Run commands to implement structure. Uses existing SSL certificate.
 ```shell
-terraform import aws_acm_certificate.cert arn:aws:acm:us-west-2:254394382277:certificate/17710933-2ac8-4393-b004-73a37e8100fb
-terraform import aws_route53_zone.sntxrr Z05234763LM5P4JGVQ78Q
+terraform plan -out=lazarus.plan
+terraform apply "lazarus.plan"
 ```
