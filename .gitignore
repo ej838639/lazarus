@@ -10,7 +10,6 @@
 
 # Folders to ignore
 .idea/
-diagrams/
 __pycache__/
 venv/
 .terraform/

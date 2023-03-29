@@ -1,5 +1,5 @@
 # Deploy Load Balancers for a https endpoint 
-Here are instructions to deploy a https endpont using a Network Load Balancer (NLB) and an Application Load Balancer (ALB) for one EC2 instance per Availability Zone.
+Here are instructions to deploy a https endpoint using a Network Load Balancer (NLB) and an Application Load Balancer (ALB) for one EC2 instance per Availability Zone.
 
 The following assumes that there is an EC2 instance with the Lazarus app in Availability Zones us-west-2b and us-west-2c
 
