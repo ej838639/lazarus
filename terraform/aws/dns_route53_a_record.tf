@@ -12,13 +12,8 @@ resource "aws_eip" "eip_c" {
   }
 }
 
-resource "aws_route53_zone" "sntxrr" {
-  name = "sntxrr.org"
-
-}
-
 resource "aws_route53_record" "www" {
-  zone_id = aws_route53_zone.sntxrr.zone_id
+  zone_id = "Z09672325EJGTAQ1VGC8"
   name    = "sntxrr.org"
   type    = "A"
   ttl     = 300
