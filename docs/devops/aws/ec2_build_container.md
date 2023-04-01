@@ -50,7 +50,7 @@ Leave it as 0.0.0.0/0 that allows any IPv4 inbound location
 
 ### Test endpoint
 From console, collect the public IP. Combine with port and API endpoint.  
-http://[PUBLIC_IP]/quiz_create
+http://[PUBLIC_IP]
 
 ## CLI
 If not already done, create access key and configure AWS CLI
